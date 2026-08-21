@@ -2,18 +2,54 @@ cmake_minimum_required(VERSION 3.20)
 
 project(RentalDashboard LANGUAGES CXX)
 
-add_executable(rental_dashboard
-    src/main.cpp
+# Use C++20 for this project
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Find Drogon installed by Homebrew
+find_package(Drogon CONFIG REQUIRED)
+
+
+# ---------------------------------------------------------
+# Reusable rental logic
+# ---------------------------------------------------------
+
+add_library(rental_core STATIC
     src/analytics.cpp
     src/csv_loader.cpp
 )
 
-target_include_directories(rental_dashboard
-    PRIVATE
+target_include_directories(rental_core
+    PUBLIC
     include
 )
 
-target_compile_features(rental_dashboard
+
+# ---------------------------------------------------------
+# Terminal application
+# ---------------------------------------------------------
+
+add_executable(rental_dashboard
+    src/main.cpp
+)
+
+target_link_libraries(rental_dashboard
     PRIVATE
-    cxx_std_20
+    rental_core
+)
+
+
+# ---------------------------------------------------------
+# Web application
+# ---------------------------------------------------------
+
+add_executable(rental_web
+    src/web_main.cpp
+)
+
+target_link_libraries(rental_web
+    PRIVATE
+    rental_core
+    Drogon::Drogon
 )
