@@ -30,6 +30,9 @@ int main()
     std::vector<Listing> bedroomListings {
     filterByBedrooms(listings, 2)
     };
+    std::vector<Listing> bathroomListings {
+    filterByBathrooms(listings, 1)
+    };
 
     for (const Listing& listing : listings)
     {
@@ -77,5 +80,20 @@ int main()
             << listing.price
             << '\n';
     }
+
+    //print listings based on minimum bathrooms
+    std::cout << "\nListings with 1+ bathrooms:\n";
+    
+    for (const Listing&listing : bedroomListings)
+    {
+        std::cout
+            << listing.title
+            << " - "
+            << listing.bathrooms
+            << " bathrooms - $"
+            << listing.price
+            << '\n';
+    }
+    
     return 0;
 }

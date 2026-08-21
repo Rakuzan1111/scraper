@@ -92,3 +92,16 @@ std::vector<Listing> filterByBedrooms(const std::vector<Listing>& listings, int 
     }
     return filteredListings;
 }
+
+// =======================================================================
+
+// filters based on minimum number of bathrooms
+std::vector<Listing> filterByBathrooms(const std::vector<Listing>& listings, double minimumBathrooms){
+    std::vector<Listing> filteredListings;
+    for (const Listing&listing : listings){
+        if (listing.bathrooms >= minimumBathrooms){
+            filteredListings.push_back(listing);
+        }
+    }
+    return filteredListings;
+}

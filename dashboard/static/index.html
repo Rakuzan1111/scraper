@@ -85,6 +85,18 @@
             placeholder="2"
         >
 
+        <label for="minBathrooms">
+            Minimum bathrooms:
+        </label>
+
+        <input
+            id="minBathrooms"
+            type="number"
+            min="0"
+            step="0.5"
+            placeholder="1"
+        >
+
         <button id="applyFilter">
             Apply Filter
         </button>
@@ -138,6 +150,9 @@
             const minBedrooms =
                 document.getElementById("minBedrooms").value;
 
+            const minBathrooms =
+                document.getElementById("minBathrooms").value;
+
             const params =
                 new URLSearchParams();
 
@@ -154,6 +169,14 @@
                 params.append(
                     "min_bedrooms",
                     minBedrooms
+                );
+            }
+
+            if (minBathrooms !== "")
+            {
+                params.append(
+                    "min_bathrooms",
+                    minBathrooms
                 );
             }
 
@@ -294,6 +317,9 @@
 
                 document.getElementById(
                     "minBedrooms"
+                ).value = "";
+                document.getElementById(
+                    "minBathrooms"
                 ).value = "";
                 loadListings();
             }

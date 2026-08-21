@@ -22,3 +22,7 @@ std::unordered_map<std::string, double> calculateAveragePriceByNeighborhood(
 std::vector<Listing> filterByBedrooms(
     const std::vector<Listing>& listings,
     int minimumBedrooms);
+
+std::vector<Listing> filterByBathrooms(
+    const std::vector<Listing>& listings,
+    double minimumBathrooms);
