@@ -81,3 +81,14 @@ std::unordered_map<std::string, double> calculateAveragePriceByNeighborhood(cons
 }
 
 // =======================================================================
+
+// filters based on the minimum number of bedrooms
+std::vector<Listing> filterByBedrooms(const std::vector<Listing>& listings, int minimumBedrooms){
+    std::vector<Listing> filteredListings;
+    for (const Listing& listing : listings){
+        if (listing.bedrooms >= minimumBedrooms){
+            filteredListings.push_back(listing);
+        }
+    }
+    return filteredListings;
+}

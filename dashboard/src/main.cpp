@@ -27,6 +27,9 @@ int main()
     double averagePrice { calculateAveragePrice(listings)};
     int priceDrops {countPriceDrops(listings)};
     std::unordered_map<std::string, double> neighborhoodAverages{calculateAveragePriceByNeighborhood(listings)};
+    std::vector<Listing> bedroomListings {
+    filterByBedrooms(listings, 2)
+    };
 
     for (const Listing& listing : listings)
     {
@@ -61,6 +64,18 @@ int main()
         std::cout << neighborhood << ": $" << average << '\n';
     }
 
+    //print listings based on minimum bedrooms
+    std::cout << "\nListings with 2+ bedrooms:\n";
 
+    for (const Listing& listing : bedroomListings)
+    {
+        std::cout
+            << listing.title
+            << " - "
+            << listing.bedrooms
+            << " bedrooms - $"
+            << listing.price
+            << '\n';
+    }
     return 0;
 }

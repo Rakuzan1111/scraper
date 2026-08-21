@@ -35,6 +35,9 @@
             padding: 8px 12px;
             margin-right: 8px;
         }
+        label {
+            margin-right: 6px;
+        }
 
         table {
             width: 100%;
@@ -69,6 +72,17 @@
             id="maxPrice"
             type="number"
             placeholder="2000"
+        >
+
+        <label for="minBedrooms">
+            Minimum bedrooms:
+        </label>
+
+        <input
+            id ="minBedrooms"
+            type="number"
+            min="0"
+            placeholder="2"
         >
 
         <button id="applyFilter">
@@ -121,18 +135,39 @@
             const maxPrice =
                 document.getElementById("maxPrice").value;
 
-            let url = "/api/listings";
+            const minBedrooms =
+                document.getElementById("minBedrooms").value;
+
+            const params =
+                new URLSearchParams();
 
             if (maxPrice !== "")
             {
-                url +=
-                    "?max_price=" +
-                    encodeURIComponent(maxPrice);
+                params.append(
+                    "max_price",
+                    maxPrice
+                );
+            }
+
+            if (minBedrooms !== "")
+            {
+                params.append(
+                    "min_bedrooms",
+                    minBedrooms
+                );
+            }
+
+            let url = "/api/listings";
+
+            if (params.toString() !== "")
+            {
+                url += "?" + params.toString();
             }
 
             const response = await fetch(url);
 
             const listings = await response.json();
+
 
             const tableBody =
                 document.getElementById("listingRows");
@@ -257,6 +292,9 @@
                     "maxPrice"
                 ).value = "";
 
+                document.getElementById(
+                    "minBedrooms"
+                ).value = "";
                 loadListings();
             }
         );

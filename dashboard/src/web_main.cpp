@@ -27,6 +27,10 @@ int main()
                 request->getParameter("max_price")
             };
 
+            std::string minBedroomsParameter{
+                request->getParameter("min_bedrooms")
+            };
+
             if (!maxPriceParameter.empty())
             {
                 double maxPrice {
@@ -34,8 +38,20 @@ int main()
                 };
 
                 results = filterByMaxPrice(
-                    listings,
+                    results,
                     maxPrice
+                );
+            }
+
+            if (!minBedroomsParameter.empty())
+            {
+                int minimumBedrooms {
+                    std::stoi(minBedroomsParameter)
+                };
+
+                results = filterByBedrooms(
+                    results,
+                    minimumBedrooms
                 );
             }
 
