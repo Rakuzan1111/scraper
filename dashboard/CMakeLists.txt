@@ -9,7 +9,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Find Drogon installed by Homebrew
 find_package(Drogon CONFIG REQUIRED)
-
+find_package(CURL REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 
 # ---------------------------------------------------------
 # Reusable rental logic
@@ -52,4 +53,16 @@ target_link_libraries(rental_web
     PRIVATE
     rental_core
     Drogon::Drogon
+)
+
+add_executable(rental_alert_checker
+    src/alert_main.cpp
+    src/discord_alert.cpp
+)
+
+target_link_libraries(rental_alert_checker
+    PRIVATE
+    rental_core
+    CURL::libcurl
+    JsonCpp::JsonCpp
 )

@@ -105,3 +105,42 @@ std::vector<Listing> filterByBathrooms(const std::vector<Listing>& listings, dou
     }
     return filteredListings;
 }
+
+// =======================================================================
+
+// filters based on if the price dropped
+std::vector<Listing> findPriceDrops(const std::vector<Listing>& listings){
+    std::vector<Listing> filteredListings;
+    for (const Listing& listing : listings){
+        if (listing.price < listing.previousPrice){
+            filteredListings.push_back(listing);
+        }
+    }
+    return filteredListings;
+}
+
+// =======================================================================
+
+// calculates how much a listing's price dropped
+double calculatePriceDropAmount(const Listing& listing){
+    if (listing.price < listing.previousPrice){
+        return listing.previousPrice - listing.price;
+    }
+    return 0.0;
+}
+
+// =======================================================================
+
+// calculates how much percent the listing's price dropped
+double calculatePriceDropPercent(const Listing& listing){
+    if (listing.previousPrice <= 0){
+        return 0.0;
+    }
+
+    if (listing.price < listing.previousPrice){
+        return ((listing.previousPrice - listing.price)/listing.previousPrice)*100;
+    }
+    return 0.0;
+}
+
+// ======================================================================

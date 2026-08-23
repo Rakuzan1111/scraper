@@ -26,3 +26,14 @@ std::vector<Listing> filterByBedrooms(
 std::vector<Listing> filterByBathrooms(
     const std::vector<Listing>& listings,
     double minimumBathrooms);
+
+std::vector<Listing> findPriceDrops(
+    const std::vector<Listing>& listings
+    );
+
+double calculatePriceDropAmount(
+    const Listing& listing
+    );
+double calculatePriceDropPercent(
+    const Listing& listing
+    );

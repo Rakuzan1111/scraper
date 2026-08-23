@@ -1,5 +1,6 @@
 //standard libraries
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <unordered_map> //very similar to a dictionary for python (without order)
@@ -33,6 +34,9 @@ int main()
     std::vector<Listing> bathroomListings {
     filterByBathrooms(listings, 1)
     };
+    std::vector<Listing> priceDropListings {
+    findPriceDrops(listings)
+    };
 
     for (const Listing& listing : listings)
     {
@@ -52,12 +56,16 @@ int main()
     //print number of apartments that dropped in price
     std::cout << "\nPrice drops: " << priceDrops << '\n';
 
+    std::cout << "=============================\n";
+
     //print what is being filtered (apartments under 2000$)
     std::cout << "\nListings at or under $" << maxPrice << ":\n";
     for (const Listing& listing : affordableListings)
     {
         std::cout << listing.title << " - $" << listing.price << '\n';
     }
+
+    std::cout << "=============================\n";
 
     //print average price per neighborhood
     std::cout << "\nAverage rent by neighborhood:\n";
@@ -66,6 +74,8 @@ int main()
     {
         std::cout << neighborhood << ": $" << average << '\n';
     }
+
+    std::cout << "=============================\n";
 
     //print listings based on minimum bedrooms
     std::cout << "\nListings with 2+ bedrooms:\n";
@@ -81,9 +91,11 @@ int main()
             << '\n';
     }
 
+    std::cout << "=============================\n";
+
     //print listings based on minimum bathrooms
     std::cout << "\nListings with 1+ bathrooms:\n";
-    
+ 
     for (const Listing&listing : bedroomListings)
     {
         std::cout
@@ -94,6 +106,27 @@ int main()
             << listing.price
             << '\n';
     }
+
+    std::cout << "=============================\n";
     
+    //print listings based on price drops
+    std::cout << "\nListings that dropped in price:\n";
+
+    std::cout << std::fixed << std::setprecision(2);
+    for (const Listing&listing : priceDropListings)
+    {
+        std::cout
+            << "--------------------\n"
+            << listing.title << '\n'
+            << "Previous: $" << listing.previousPrice << '\n'
+            << "Current: $" << listing.price << '\n'
+            << "Drop: $" << calculatePriceDropAmount(listing) <<'\n'
+            << "Drop %: " << calculatePriceDropPercent(listing) <<"%\n"
+            << '\n';
+    }
+
+
+
+
     return 0;
 }
