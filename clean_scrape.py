@@ -18,7 +18,7 @@ df["bedrooms_sort"] = pd.to_numeric(df["Bedrooms"].str.extract(r"(\d+)")[0],
     errors="coerce")
 
 
-df["bathrooms_sort"] = pd.to_numeric(df["Bathrooms"].str.extract(r"(\d+)")[0],
+df["bathrooms_sort"] = pd.to_numeric(df["Bathrooms"].str.extract(r"(\d+(?:\.\d+)?)")[0],
     errors="coerce")
 
 df['parking_sort'] = pd.to_numeric(df['Parking'].str.extract(r'(\d+)')[0],
