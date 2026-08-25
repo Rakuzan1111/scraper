@@ -1,5 +1,5 @@
 id,source,title,price,previous_price,neighborhood,city,bedrooms,bathrooms,url
-A001,test-site,2 Bedroom Downtown Apartment,1850,1950,Downtown,Montreal,2,1,https://example.com/A001
+A001,test-site,2 Bedroom Downtown Apartment,1750,1850,Downtown,Montreal,2,1,https://example.com/A001
 A002,test-site,Plateau Studio,1450,1350,Plateau,Montreal,0,1,https://example.com/A002
 A003,test-site,Verdun 3 Bedroom Apartment,2200,2400,Verdun,Montreal,3,2,https://example.com/A003
 A004,test-site,Downtown 1 Bedroom Loft,2050,2050,Downtown,Montreal,1,1,https://example.com/A004

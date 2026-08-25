@@ -9,6 +9,7 @@
 #include "listing.hpp"
 #include "analytics.hpp"
 #include "csv_loader.hpp"
+#include "price_history.hpp"
 
 // =======================================================================
 
@@ -125,8 +126,23 @@ int main()
             << '\n';
     }
 
-
-
+    //print price history
+    std::vector<PriceHistoryEntry> history {loadPriceHistory("dashboard/data/price_history.csv")};
+    std::vector<PriceHistoryEntry> filteredHistory {getPriceHistoryForListing(history, "https://example.com/A001")};
+    std::cout 
+        << "PRICE HISTORY TEST\n"
+        << "==================\n"
+        << "Total history entries: " << filteredHistory.size() << '\n'
+        << "History for A001:\n";
+    
+    for (const PriceHistoryEntry& entry: filteredHistory)
+    {
+        std::cout
+            << entry.checkedAt << " - " << entry.price << '\n';
+    }
+    std::cout 
+        << "\nPrevious price: $" << getPreviousPrice(filteredHistory)
+        << "\nCurrent price: $" << filteredHistory.back().price;
 
     return 0;
 }

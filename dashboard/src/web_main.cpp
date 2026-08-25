@@ -3,6 +3,7 @@
 
 #include "csv_loader.hpp"
 #include "analytics.hpp"
+#include "price_history.hpp"
 
 
 int main()
@@ -128,6 +129,78 @@ drogon::app().registerHandler(
         auto response =
             drogon::HttpResponse::newHttpJsonResponse(
                 jsonAverages
+            );
+
+        callback(response);
+    },
+    {drogon::Get}
+);
+// =========================================================================
+
+drogon::app().registerHandler(
+    "/api/price-history",
+    [](
+        const drogon::HttpRequestPtr& request,
+        std::function<void(
+            const drogon::HttpResponsePtr&)>&& callback)
+    {
+        std::string url {
+            request->getParameter("url")
+        };
+
+        if (url.empty())
+        {
+            Json::Value error;
+            error["error"] = "Missing url parameter";
+
+            auto response =
+                drogon::HttpResponse::newHttpJsonResponse(
+                    error
+                );
+
+            response->setStatusCode(
+                drogon::k400BadRequest
+            );
+
+            callback(response);
+            return;
+        }
+
+        std::vector<PriceHistoryEntry> history {
+            loadPriceHistory(
+                "dashboard/data/price_history.csv"
+            )
+        };
+
+        std::vector<PriceHistoryEntry> listingHistory {
+            getPriceHistoryForListing(
+                history,
+                url
+            )
+        };
+
+        Json::Value jsonHistory(
+            Json::arrayValue
+        );
+
+        for (const PriceHistoryEntry& entry : listingHistory)
+        {
+            Json::Value jsonEntry;
+
+            jsonEntry["price"] =
+                entry.price;
+
+            jsonEntry["checkedAt"] =
+                entry.checkedAt;
+
+            jsonHistory.append(
+                jsonEntry
+            );
+        }
+
+        auto response =
+            drogon::HttpResponse::newHttpJsonResponse(
+                jsonHistory
             );
 
         callback(response);

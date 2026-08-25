@@ -5,14 +5,22 @@
 #include <cstdlib>
 #include <curl/curl.h>
 #include <sstream>
+#include <string>
+#include <unordered_set>
 
 // files
 #include "analytics.hpp"
 #include "csv_loader.hpp"
 #include "discord_alert.hpp"
+#include "alert_state.hpp"
 
 int main()
 {
+    // testing variables
+    int newAlertsSent{};
+    int alreadyAlerted{};
+
+
     const char* webhookUrl {
         std::getenv(
             "DISCORD_WEBHOOK_URL"
@@ -46,6 +54,13 @@ int main()
     loadListingsFromCsv("dashboard/data/listings.csv")
     };
 
+    // load the file with existing alerts
+    const std::string alertStateFile{
+        "dashboard/data/sent_alerts.txt"
+    };
+    std::unordered_set<std::string> sentAlertKeys {
+        loadSentAlertKeys(alertStateFile)
+    };
 
     // filter to only the listings whose price dropped
     std::vector<Listing>priceDropListings
@@ -59,13 +74,26 @@ int main()
     std::cout 
         << "RENTAL ALERT CHECKER\n"
         << "====================\n"
-        << "\nPrice drops found: " << priceDropListings.size() << '\n';
+        << "Price drops found: " << priceDropListings.size() << "\n\n";
 
     
 
     // list of listings
     for (const Listing& listing : priceDropListings)
     {
+        // create a price drop alert key
+        std::string alertKey{
+            makePriceDropAlertKey(listing)
+        };
+
+        // checks if it already exists (if not, continue to next listing)
+        if (sentAlertKeys.contains(alertKey))
+        {
+            std::cout << "Alert key already exists\n";
+            ++alreadyAlerted;
+            continue;
+        }
+        // create the discord message
         std::ostringstream message;
         message << std::fixed << std::setprecision(2);
 
@@ -81,6 +109,8 @@ int main()
         std::string messageText {
             message.str()
         };
+
+        // send the discord message
         bool sent {
             sendDiscordMessage(
                 webhookUrl,
@@ -92,9 +122,30 @@ int main()
                 << "Failed to send alert for: "
                 << listing.title
                 << '\n';
+            continue;
         }
+        ++newAlertsSent;
+        // save the alert key so message doesn't repeat itself if no price decrease between two scrapings
+        bool saved {
+            saveSentAlertKey(
+                alertStateFile,
+                alertKey
+            )
+        };
 
+        if (!saved){
+            std::cerr
+                << "Alert sent, but failed to save alert state for: "
+                << listing.title
+                << '\n';
+            continue;
+        }
+        sentAlertKeys.insert(alertKey);
     }
+    std::cout
+        << "\nPrice drops detected: " << priceDropListings.size() << '\n'
+        << "New alerts sent: " << newAlertsSent << '\n'
+        << "Already alerted: " << alreadyAlerted << '\n';
 
     curl_global_cleanup();
 

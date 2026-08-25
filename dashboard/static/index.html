@@ -118,6 +118,7 @@
                 <th>Neighborhood</th>
                 <th>Bedrooms</th>
                 <th>Bathrooms</th>
+                <th>Price History</th>
             </tr>
         </thead>
 
@@ -129,7 +130,15 @@
     <h2>Average Rent by Neighborhood</h2>
 
     <canvas id="neighborhoodChart"></canvas>
+    <h2 id="priceHistoryTitle">
+        Price History
+    </h2>
 
+    <p id="priceHistoryStatus">
+        Select a listing to view its price history.
+    </p>
+
+<canvas id="priceHistoryChart"></canvas>
     <script>
 
         function addCell(row, value)
@@ -226,6 +235,33 @@
                     row,
                     listing.bathrooms
                 );
+                const historyCell =
+                    document.createElement("td");
+
+                const historyButton =
+                    document.createElement("button");
+
+                historyButton.textContent =
+                    "View History";
+
+                historyButton.addEventListener(
+                    "click",
+                    function()
+                    {
+                        loadPriceHistory(
+                            listing.url,
+                            listing.title
+                        );
+                    }
+                );
+
+                historyCell.appendChild(
+                    historyButton
+                );
+
+                row.appendChild(
+                    historyCell
+                );
 
                 tableBody.appendChild(row);
             }
@@ -236,6 +272,121 @@
                 listings.length +
                 " listings found";
         }
+
+
+        let priceHistoryChart = null;
+
+
+        async function loadPriceHistory(
+            url,
+            title
+        )
+        {
+            const params =
+                new URLSearchParams();
+
+            params.append(
+                "url",
+                url
+            );
+
+            const response =
+                await fetch(
+                    "/api/price-history?" +
+                    params.toString()
+                );
+
+            const history =
+                await response.json();
+
+
+            document.getElementById(
+                "priceHistoryTitle"
+            ).textContent =
+                "Price History — " + title;
+
+
+            const status =
+                document.getElementById(
+                    "priceHistoryStatus"
+                );
+
+
+            if (history.length === 0)
+            {
+                status.textContent =
+                    "No price history available.";
+
+                if (priceHistoryChart)
+                {
+                    priceHistoryChart.destroy();
+
+                    priceHistoryChart = null;
+                }
+
+                return;
+            }
+
+
+            status.textContent =
+                history.length +
+                " price observations";
+
+
+            const dates =
+                history.map(
+                    entry => entry.checkedAt
+                );
+
+
+            const prices =
+                history.map(
+                    entry => entry.price
+                );
+
+
+            const canvas =
+                document.getElementById(
+                    "priceHistoryChart"
+                );
+
+
+            if (priceHistoryChart)
+            {
+                priceHistoryChart.destroy();
+            }
+
+
+            priceHistoryChart =
+                new Chart(
+                    canvas,
+                    {
+                        type: "line",
+
+                        data: {
+                            labels: dates,
+
+                            datasets: [
+                                {
+                                    label: "Rent",
+                                    data: prices
+                                }
+                            ]
+                        },
+
+                        options: {
+                            responsive: true,
+
+                            scales: {
+                                y: {
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    }
+                );
+        }
+
 
         async function loadNeighborhoodChart()
         {
