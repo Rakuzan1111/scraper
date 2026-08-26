@@ -13,6 +13,7 @@
 #include "csv_loader.hpp"
 #include "discord_alert.hpp"
 #include "alert_state.hpp"
+#include "price_history.hpp"
 
 int main()
 {
@@ -49,9 +50,26 @@ int main()
     }
 
     // load the listings from our csv file
-    std::vector<Listing>listings 
-    {
-    loadListingsFromCsv("dashboard/data/listings.csv")
+    std::vector<Listing> listings {
+        loadListingsFromCsv(
+            "dashboard/data/listings.csv"
+        )
+    };
+
+    
+    std::vector<PriceHistoryEntry> history {
+        loadPriceHistory(
+            "dashboard/data/price_history.csv"
+        )
+    };
+
+    attachPreviousPrices(
+        listings,
+        history
+    );
+    // filter only the listings whose price dropped
+    std::vector<Listing> priceDropListings {
+        findPriceDrops(listings)
     };
 
     // load the file with existing alerts
@@ -62,11 +80,7 @@ int main()
         loadSentAlertKeys(alertStateFile)
     };
 
-    // filter to only the listings whose price dropped
-    std::vector<Listing>priceDropListings
-    {
-    findPriceDrops(listings)
-    };
+
 
     //print all info
     std::cout << std::fixed << std::setprecision(2); //max two numbers after decimal
@@ -100,10 +114,11 @@ int main()
         message
             << "RENTAL PRICE DROP\n\n"
             << listing.title << '\n'
-            << "Previous price: $" << listing.previousPrice << '\n'
-            << "Current price: $" << listing.price << '\n'
+            << "Previous price: $" << *listing.previousPrice << '\n'
+            << "Current price: $" << *listing.price << '\n'
             << "Price drop: $" << calculatePriceDropAmount(listing) << '\n'
             << "Drop percent: " << calculatePriceDropPercent(listing) << "%\n\n"
+            << listing.location << '\n'
             << listing.url;
 
         std::string messageText {

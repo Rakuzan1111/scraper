@@ -24,20 +24,21 @@ std::vector<PriceHistoryEntry> loadPriceHistory(
     while(std::getline(file, line))
     {
         std::vector<std::string> fields {
-            splitLine(line)
+            splitCsvLine(line)
         };
-            if (fields.size() != 5)
+            if (fields.size() != 6)
         {
             std::cerr << "Skipping invalid CSV row.\n";
             continue; // keyword to stop current loop and start next iteration 
         }
         PriceHistoryEntry entry;
 
-        entry.url = fields[0];
-        entry.title = fields[1];
-        entry.location = fields[2];
-        entry.price = std::stod(fields[3]);
-        entry.checkedAt = fields[4];
+        entry.listingId = fields[0];
+        entry.url = fields[1];
+        entry.title = fields[2];
+        entry.location = fields[3];
+        entry.price = parseOptionalDouble(fields[4]);
+        entry.checkedAt = fields[5];
 
         priceHistory.push_back(entry);
     }
@@ -47,26 +48,87 @@ std::vector<PriceHistoryEntry> loadPriceHistory(
 
 std::vector<PriceHistoryEntry> getPriceHistoryForListing(
     const std::vector<PriceHistoryEntry>& history,
-    const std::string& url)
+    const std::string& listingId)
 {
     std::vector<PriceHistoryEntry> specificListing;
     for (const PriceHistoryEntry& entry: history){
-        if(entry.url == url){
+        if(entry.listingId == listingId){
             specificListing.push_back(entry);
         }
     }
     return specificListing;
 }
 
-double getPreviousPrice(
+std::optional<double> getPreviousPrice(
     const std::vector<PriceHistoryEntry>& listingHistory)
 {
-    if (listingHistory.size() < 2){
-        return 0.0;
+    if (listingHistory.size() < 2)
+    {
+        return std::nullopt;
     }
 
-    const PriceHistoryEntry& previousEntry {
-        listingHistory[listingHistory.size() - 2]
-    };
-    return previousEntry.price;
+    for (std::size_t i = listingHistory.size() - 1;
+         i > 0;
+         --i)
+    {
+        const PriceHistoryEntry& previousEntry {
+            listingHistory[i - 1]
+        };
+
+        if (previousEntry.price.has_value())
+        {
+            return previousEntry.price;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<double> parsePrice(
+    const std::string& priceText
+)
+{
+
+    if(priceText == "Please Contact" || priceText == "N/A" || priceText == ""){
+        return std::nullopt;
+    }
+    std::string cleanedPrice;
+
+    for (char character : priceText)
+    {
+        if ((character >= '0' && character <= '9') ||
+            character == '.')
+        {
+            cleanedPrice += character;
+        }
+    }
+    if (cleanedPrice.empty()){
+        return std::nullopt;
+    }
+    try
+    {
+        return std::stod(cleanedPrice);
+    }
+    catch(...)
+    {
+        return std::nullopt;
+    }
+}
+
+void attachPreviousPrices(
+    std::vector<Listing>& listings,
+    const std::vector<PriceHistoryEntry>& history)
+{
+    for (Listing& listing : listings)
+    {
+        const std::vector<PriceHistoryEntry> listingHistory {
+            getPriceHistoryForListing(
+                history,
+                listing.id
+            )
+        };
+
+        listing.previousPrice =
+            getPreviousPrice(listingHistory);
+    }
 }

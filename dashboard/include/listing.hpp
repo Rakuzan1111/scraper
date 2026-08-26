@@ -1,17 +1,26 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 struct Listing
 {
     std::string id;
-    std::string source;
+    std::string source {"kijiji"};
+
+    std::optional<double> price;
+    std::optional<double> previousPrice;
+
     std::string title;
-    double price {};
-    double previousPrice {};
-    std::string neighborhood;
-    std::string city;
-    int bedrooms {};
-    double bathrooms {};
+    std::string location;
+
+    std::optional<int> bedrooms;
+    std::optional<double> bathrooms;
+
+    std::string unitType;
+
+    std::optional<int> parking;
+    std::optional<int> sizeSqft;
+
     std::string url;
 };

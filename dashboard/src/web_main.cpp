@@ -10,8 +10,21 @@ int main()
 {
     // get the data in listings.csv file
     std::vector<Listing> listings {
-    loadListingsFromCsv("dashboard/data/listings.csv")
+        loadListingsFromCsv(
+            "dashboard/data/listings.csv"
+        )
     };
+
+    std::vector<PriceHistoryEntry> history {
+        loadPriceHistory(
+            "dashboard/data/price_history.csv"
+        )
+    };
+
+    attachPreviousPrices(
+        listings,
+        history
+    );
 
 // ============================================================================
 
@@ -81,12 +94,66 @@ int main()
                 jsonListing["id"] = listing.id;
                 jsonListing["source"] = listing.source;
                 jsonListing["title"] = listing.title;
-                jsonListing["price"] = listing.price;
-                jsonListing["previousPrice"] = listing.previousPrice;
-                jsonListing["neighborhood"] = listing.neighborhood;
-                jsonListing["city"] = listing.city;
-                jsonListing["bedrooms"] = listing.bedrooms;
-                jsonListing["bathrooms"] = listing.bathrooms;
+                jsonListing["location"] = listing.location;
+                jsonListing["unitType"] = listing.unitType;
+                if (listing.price.has_value())
+                {
+                    jsonListing["price"] = *listing.price;
+                }
+                else
+                {
+                    jsonListing["price"] = Json::nullValue;
+                }
+                if (listing.previousPrice.has_value())
+                {
+                    jsonListing["previousPrice"] =
+                        *listing.previousPrice;
+                }
+                else
+                {
+                    jsonListing["previousPrice"] =
+                        Json::nullValue;
+                }
+                if (listing.bedrooms.has_value())
+                {
+                    jsonListing["bedrooms"] =
+                        *listing.bedrooms;
+                }
+                else
+                {
+                    jsonListing["bedrooms"] =
+                        Json::nullValue;
+                }           
+                if (listing.bathrooms.has_value())
+                {
+                    jsonListing["bathrooms"] =
+                        *listing.bathrooms;
+                }
+                else
+                {
+                    jsonListing["bathrooms"] =
+                        Json::nullValue;
+                }
+                if (listing.parking.has_value())
+                {
+                    jsonListing["parking"] =
+                        *listing.parking;
+                }
+                else
+                {
+                    jsonListing["parking"] =
+                        Json::nullValue;
+                }
+                if (listing.sizeSqft.has_value())
+                {
+                    jsonListing["sizeSqft"] =
+                        *listing.sizeSqft;
+                }
+                else
+                {
+                    jsonListing["sizeSqft"] =
+                        Json::nullValue;
+                }
                 jsonListing["url"] = listing.url;
 
                 jsonListings.append(jsonListing);
@@ -105,22 +172,22 @@ int main()
 // =========================================================================
 
 drogon::app().registerHandler(
-    "/api/neighborhood-averages",
+    "/api/location-averages",
     [listings](
         const drogon::HttpRequestPtr& request,
         std::function<void(
             const drogon::HttpResponsePtr&)>&& callback)
     {
         auto averages =
-            calculateAveragePriceByNeighborhood(listings);
+            calculateAveragePriceByLocation(listings);
 
         Json::Value jsonAverages(Json::arrayValue);
 
-        for (const auto& [neighborhood, averagePrice] : averages)
+        for (const auto& [location, averagePrice] : averages)
         {
             Json::Value item;
 
-            item["neighborhood"] = neighborhood;
+            item["location"] = location;
             item["averagePrice"] = averagePrice;
 
             jsonAverages.append(item);
@@ -144,14 +211,14 @@ drogon::app().registerHandler(
         std::function<void(
             const drogon::HttpResponsePtr&)>&& callback)
     {
-        std::string url {
-            request->getParameter("url")
+        std::string listingId {
+            request->getParameter("listing_id")
         };
 
-        if (url.empty())
+        if (listingId.empty())
         {
             Json::Value error;
-            error["error"] = "Missing url parameter";
+            error["error"] = "Missing listing_id parameter";
 
             auto response =
                 drogon::HttpResponse::newHttpJsonResponse(
@@ -175,7 +242,7 @@ drogon::app().registerHandler(
         std::vector<PriceHistoryEntry> listingHistory {
             getPriceHistoryForListing(
                 history,
-                url
+                listingId
             )
         };
 
@@ -187,8 +254,16 @@ drogon::app().registerHandler(
         {
             Json::Value jsonEntry;
 
-            jsonEntry["price"] =
-                entry.price;
+            if (entry.price.has_value())
+            {
+                jsonEntry["price"] =
+                    *entry.price;
+            }
+            else
+            {
+                jsonEntry["price"] =
+                    Json::nullValue;
+            }
 
             jsonEntry["checkedAt"] =
                 entry.checkedAt;

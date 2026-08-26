@@ -8,19 +8,29 @@
 // =======================================================
 
 //creates a unique drop alert key for every listing
-std::string makePriceDropAlertKey(const Listing& listing)
+std::string makePriceDropAlertKey(
+    const Listing& listing)
 {
-    std::ostringstream alertKey;
-    alertKey << std::fixed << std::setprecision(2);
+    if (!listing.previousPrice.has_value() ||
+        !listing.price.has_value())
+    {
+        return {};
+    }
 
-    alertKey 
-        << listing.source 
+    std::ostringstream alertKey;
+
+    alertKey
+        << std::fixed
+        << std::setprecision(2);
+
+    alertKey
+        << listing.source
         << '|'
         << listing.id
         << '|'
-        << listing.previousPrice
+        << *listing.previousPrice
         << '|'
-        << listing.price;
+        << *listing.price;
 
     return alertKey.str();
 }

@@ -1,6 +1,7 @@
-id,source,title,price,previous_price,neighborhood,city,bedrooms,bathrooms,url
-A001,test-site,2 Bedroom Downtown Apartment,1750,1850,Downtown,Montreal,2,1,https://example.com/A001
-A002,test-site,Plateau Studio,1450,1350,Plateau,Montreal,0,1,https://example.com/A002
-A003,test-site,Verdun 3 Bedroom Apartment,2200,2400,Verdun,Montreal,3,2,https://example.com/A003
-A004,test-site,Downtown 1 Bedroom Loft,2050,2050,Downtown,Montreal,1,1,https://example.com/A004
-A005,test-site,Plateau 2 Bedroom Apartment,1750,1850,Plateau,Montreal,2,1,https://example.com/A005
+Listing ID,Price ($),Description,Location,Bedrooms,Bathrooms,Unit Type,Parking,Size (sqft),Website
+A001,1750,2 Bedroom Downtown Apartment,Downtown,2,1,Apartment,1,850,https://example.com/A001
+A002,1450,Plateau Studio,Plateau,0,1,Studio,0,450,https://example.com/A002
+A003,2200,Verdun 3 Bedroom Apartment,Verdun,3,2,Apartment,1,1200,https://example.com/A003
+A004,2050,Downtown 1 Bedroom Loft,Downtown,1,1,Loft,N/A,700,https://example.com/A004
+A005,1750,Plateau 2 Bedroom Apartment,Plateau,2,1,Apartment,1,900,https://example.com/A005
+A006,Please Contact,Unknown Price Apartment,Laval,2,1.5,Apartment,N/A,N/A,https://example.com/A006

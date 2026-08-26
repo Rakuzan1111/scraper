@@ -115,9 +115,12 @@
             <tr>
                 <th>Title</th>
                 <th>Rent</th>
-                <th>Neighborhood</th>
+                <th>Location</th>
                 <th>Bedrooms</th>
                 <th>Bathrooms</th>
+                <th>Unit Type</th>
+                <th>Parking</th>
+                <th>Size</th>
                 <th>Price History</th>
             </tr>
         </thead>
@@ -127,9 +130,9 @@
 
     </table>
 
-    <h2>Average Rent by Neighborhood</h2>
+    <h2>Average Rent by Location</h2>
 
-    <canvas id="neighborhoodChart"></canvas>
+    <canvas id="locationChart"></canvas>
     <h2 id="priceHistoryTitle">
         Price History
     </h2>
@@ -140,7 +143,26 @@
 
 <canvas id="priceHistoryChart"></canvas>
     <script>
+        function formatPrice(price)
+        {
+            if (price === null)
+            {
+                return "Please Contact";
+            }
 
+            return "$" + price;
+        }
+
+
+        function formatOptional(value, fallback = "N/A")
+        {
+            if (value === null)
+            {
+                return fallback;
+            }
+
+            return value;
+        }
         function addCell(row, value)
         {
             const cell = document.createElement("td");
@@ -218,23 +240,41 @@
 
                 addCell(
                     row,
-                    "$" + listing.price
+                    formatPrice(listing.price)
                 );
 
                 addCell(
                     row,
-                    listing.neighborhood
+                    listing.location
                 );
 
                 addCell(
                     row,
-                    listing.bedrooms
+                    formatOptional(listing.bedrooms)
                 );
 
                 addCell(
                     row,
-                    listing.bathrooms
+                    formatOptional(listing.bathrooms)
                 );
+
+                addCell(
+                    row,
+                    listing.unitType
+                );
+
+                addCell(
+                    row,
+                    formatOptional(listing.parking)
+                );
+
+                addCell(
+                    row,
+                    listing.sizeSqft === null
+                    ? "N/A"
+                    : listing.sizeSqft + " sqft"
+                );
+                
                 const historyCell =
                     document.createElement("td");
 
@@ -249,7 +289,7 @@
                     function()
                     {
                         loadPriceHistory(
-                            listing.url,
+                            listing.id,
                             listing.title
                         );
                     }
@@ -278,7 +318,7 @@
 
 
         async function loadPriceHistory(
-            url,
+            listingId,
             title
         )
         {
@@ -286,8 +326,8 @@
                 new URLSearchParams();
 
             params.append(
-                "url",
-                url
+                "listing_id",
+                listingId
             );
 
             const response =
@@ -388,17 +428,17 @@
         }
 
 
-        async function loadNeighborhoodChart()
+        async function loadLocationChart()
         {
             const response =
-                await fetch("/api/neighborhood-averages");
+                await fetch("/api/location-averages");
 
             const averages =
                 await response.json();
 
-            const neighborhoods =
+            const locations =
                 averages.map(
-                    item => item.neighborhood
+                    item => item.location
                 );
 
             const prices =
@@ -408,13 +448,13 @@
 
             const canvas =
                 document.getElementById(
-                    "neighborhoodChart"
+                    "locationChart"
                 );
 
             if (!canvas)
             {
                 console.error(
-                "Could not find neighborhoodChart canvas."
+                    "Could not find neighborhoodChart canvas."
                 );
 
             return;
@@ -425,7 +465,7 @@
                     type: "bar",
 
                     data: {
-                        labels: neighborhoods,
+                        labels: locations,
 
                         datasets: [
                             {
@@ -482,7 +522,7 @@
             function()
             {
                 loadListings();
-                loadNeighborhoodChart();
+                loadLocationChart();
             }
 );
 
