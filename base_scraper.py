@@ -42,7 +42,7 @@ duplicate = 0
 # Writes the new csv file
 with open("listings.csv", 'w', newline='', encoding='UTF-8-SIG') as f:
     writer = csv.writer(f)
-    writer.writerow(['Price ($)', 'Description', 'Location', 'Bedrooms', 'Bathrooms', 'Unit Type', 'Parking', 'Size (sqft)', 'Website'])
+    writer.writerow(['Listing ID', 'Price ($)', 'Description', 'Location', 'Bedrooms', 'Bathrooms', 'Unit Type', 'Parking', 'Size (sqft)', 'Website'])
 
     base_url = 'https://www.kijiji.ca/b-a-louer/grand-montreal/{page_part}c30349001l80002'
 
@@ -60,6 +60,8 @@ with open("listings.csv", 'w', newline='', encoding='UTF-8-SIG') as f:
         for information in cards:
             listing = information.find('a', attrs={'data-testid': 'listing-link'})
             website = listing.get('href')
+            listing_id = website.split('/')[-1]
+            
             # Filters duplicates with set()
             if website in seen:
                 duplicate += 1
@@ -95,7 +97,7 @@ with open("listings.csv", 'w', newline='', encoding='UTF-8-SIG') as f:
             if data['size'] != 'N/A':
                 data['size'] = re.search(r'\d+', data['size']).group()
 
-            writer.writerow(list(data.values()) + [website])
+            writer.writerow([listing_id] + list(data.values()) + [website])
 
 print('Unique listings: ', new) 
 print('Duplicated(Removed) listings: ', duplicate)       
