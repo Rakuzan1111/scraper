@@ -31,7 +31,7 @@ class ListingspiderSpider(scrapy.Spider):
     def start_requests(self):
         
         url = "https://www.kijiji.ca/b-a-louer/grand-montreal/c30349001l80002"
-        for page in range(1, 50):
+        for page in range(1, 3):
             
             if page != 1:
                 url = f"https://www.kijiji.ca/b-a-louer/grand-montreal/page-{page}/c30349001l80002"
@@ -76,16 +76,17 @@ class ListingspiderSpider(scrapy.Spider):
 
                 listing = {
                     'Listing ID' : listing_id,
-                    'Price ($)' : card.css('p[data-testid="listing-price"]::text').get(default='N/A').strip('$'),
+                    'Price ($)' : re.sub(r'[$,]', '', card.css('p[data-testid="listing-price"]::text').get(default='N/A')),
                     'Description' : card.css('a[data-testid="listing-link"]::text').get(default='N/A'),
                     'Location' : card.css('p[data-testid="listing-location"]::text').get(default='N/A'),
                     'Bedrooms' : card.css('li[aria-label="Bedrooms"] ::text').get(default='N/A'),
                     'Bathrooms' : card.css('li[aria-label="Bathrooms"] ::text').get(default='N/A'),
                     'Unit Type' : card.css('li[aria-label="Unit type"] ::text').get(default='N/A'),
                     'Parking' : card.css('li[aria-label="Parking included"] ::text').get(default='N/A'),
-                    'Size (sqft)' : card.css('li[aria-label="Size (sqft)"] ::text').get(default='N/A'),
+                    'Size (sqft)' : re.search(r'\d+', card.css('li[aria-label="Size (sqft)"] ::text').get(default='N/A')).group(),
                     'Website' :  website
                     }
+                
                 logger.debug(f"""Added listing {listing_id} to listings with properties
     Listing ID: {listing_id} 
     Price : ${listing['Price ($)']} 
