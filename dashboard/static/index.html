@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Rental Deal Tracker</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .filters {
+            margin-bottom: 25px;
+        }
+
+        input,
+        button {
+            padding: 8px 12px;
+            margin-right: 8px;
+        }
+        label {
+            margin-right: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Rental Deal Tracker</h1>
+
+    <div class="filters">
+
+        <label for="maxPrice">
+            Maximum rent:
+        </label>
+
+        <input
+            id="maxPrice"
+            type="number"
+            placeholder="2000"
+        >
+
+        <label for="minBedrooms">
+            Minimum bedrooms:
+        </label>
+
+        <input
+            id ="minBedrooms"
+            type="number"
+            min="0"
+            placeholder="2"
+        >
+
+        <label for="minBathrooms">
+            Minimum bathrooms:
+        </label>
+
+        <input
+            id="minBathrooms"
+            type="number"
+            min="0"
+            step="0.5"
+            placeholder="1"
+        >
+
+        <button id="applyFilter">
+            Apply Filter
+        </button>
+
+        <button id="showAll">
+            Show All
+        </button>
+
+    </div>
+
+    <p id="listingCount"></p>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Rent</th>
+                <th>Location</th>
+                <th>Bedrooms</th>
+                <th>Bathrooms</th>
+                <th>Unit Type</th>
+                <th>Parking</th>
+                <th>Size</th>
+                <th>Price History</th>
+            </tr>
+        </thead>
+
+        <tbody id="listingRows">
+        </tbody>
+
+    </table>
+
+    <h2>Average Rent by Location</h2>
+
+    <canvas id="locationChart"></canvas>
+    <h2 id="priceHistoryTitle">
+        Price History
+    </h2>
+
+    <p id="priceHistoryStatus">
+        Select a listing to view its price history.
+    </p>
+
+<canvas id="priceHistoryChart"></canvas>
+    <script>
+        function formatPrice(price)
+        {
+            if (price === null)
+            {
+                return "Please Contact";
+            }
+
+            return "$" + price;
+        }
+
+
+        function formatOptional(value, fallback = "N/A")
+        {
+            if (value === null)
+            {
+                return fallback;
+            }
+
+            return value;
+        }
+        function addCell(row, value)
+        {
+            const cell = document.createElement("td");
+
+            cell.textContent = value;
+
+            row.appendChild(cell);
+        }
+
+
+        async function loadListings()
+        {
+            const maxPrice =
+                document.getElementById("maxPrice").value;
+
+            const minBedrooms =
+                document.getElementById("minBedrooms").value;
+
+            const minBathrooms =
+                document.getElementById("minBathrooms").value;
+
+            const params =
+                new URLSearchParams();
+
+            if (maxPrice !== "")
+            {
+                params.append(
+                    "max_price",
+                    maxPrice
+                );
+            }
+
+            if (minBedrooms !== "")
+            {
+                params.append(
+                    "min_bedrooms",
+                    minBedrooms
+                );
+            }
+
+            if (minBathrooms !== "")
+            {
+                params.append(
+                    "min_bathrooms",
+                    minBathrooms
+                );
+            }
+
+            let url = "/api/listings";
+
+            if (params.toString() !== "")
+            {
+                url += "?" + params.toString();
+            }
+
+            const response = await fetch(url);
+
+            const listings = await response.json();
+
+
+            const tableBody =
+                document.getElementById("listingRows");
+
+            tableBody.replaceChildren();
+
+            for (const listing of listings)
+            {
+                const row =
+                    document.createElement("tr");
+
+                addCell(
+                    row,
+                    listing.title
+                );
+
+                addCell(
+                    row,
+                    formatPrice(listing.price)
+                );
+
+                addCell(
+                    row,
+                    listing.location
+                );
+
+                addCell(
+                    row,
+                    formatOptional(listing.bedrooms)
+                );
+
+                addCell(
+                    row,
+                    formatOptional(listing.bathrooms)
+                );
+
+                addCell(
+                    row,
+                    listing.unitType
+                );
+
+                addCell(
+                    row,
+                    formatOptional(listing.parking)
+                );
+
+                addCell(
+                    row,
+                    listing.sizeSqft === null
+                    ? "N/A"
+                    : listing.sizeSqft + " sqft"
+                );
+                
+                const historyCell =
+                    document.createElement("td");
+
+                const historyButton =
+                    document.createElement("button");
+
+                historyButton.textContent =
+                    "View History";
+
+                historyButton.addEventListener(
+                    "click",
+                    function()
+                    {
+                        loadPriceHistory(
+                            listing.id,
+                            listing.title
+                        );
+                    }
+                );
+
+                historyCell.appendChild(
+                    historyButton
+                );
+
+                row.appendChild(
+                    historyCell
+                );
+
+                tableBody.appendChild(row);
+            }
+
+            document.getElementById(
+                "listingCount"
+            ).textContent =
+                listings.length +
+                " listings found";
+        }
+
+
+        let priceHistoryChart = null;
+
+
+        async function loadPriceHistory(
+            listingId,
+            title
+        )
+        {
+            const params =
+                new URLSearchParams();
+
+            params.append(
+                "listing_id",
+                listingId
+            );
+
+            const response =
+                await fetch(
+                    "/api/price-history?" +
+                    params.toString()
+                );
+
+            const history =
+                await response.json();
+
+
+            document.getElementById(
+                "priceHistoryTitle"
+            ).textContent =
+                "Price History — " + title;
+
+
+            const status =
+                document.getElementById(
+                    "priceHistoryStatus"
+                );
+
+
+            if (history.length === 0)
+            {
+                status.textContent =
+                    "No price history available.";
+
+                if (priceHistoryChart)
+                {
+                    priceHistoryChart.destroy();
+
+                    priceHistoryChart = null;
+                }
+
+                return;
+            }
+
+
+            status.textContent =
+                history.length +
+                " price observations";
+
+
+            const dates =
+                history.map(
+                    entry => entry.checkedAt
+                );
+
+
+            const prices =
+                history.map(
+                    entry => entry.price
+                );
+
+
+            const canvas =
+                document.getElementById(
+                    "priceHistoryChart"
+                );
+
+
+            if (priceHistoryChart)
+            {
+                priceHistoryChart.destroy();
+            }
+
+
+            priceHistoryChart =
+                new Chart(
+                    canvas,
+                    {
+                        type: "line",
+
+                        data: {
+                            labels: dates,
+
+                            datasets: [
+                                {
+                                    label: "Rent",
+                                    data: prices
+                                }
+                            ]
+                        },
+
+                        options: {
+                            responsive: true,
+
+                            scales: {
+                                y: {
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    }
+                );
+        }
+
+
+        async function loadLocationChart()
+        {
+            const response =
+                await fetch("/api/location-averages");
+
+            const averages =
+                await response.json();
+
+            const locations =
+                averages.map(
+                    item => item.location
+                );
+
+            const prices =
+                averages.map(
+                    item => item.averagePrice
+                );
+
+            const canvas =
+                document.getElementById(
+                    "locationChart"
+                );
+
+            if (!canvas)
+            {
+                console.error(
+                    "Could not find neighborhoodChart canvas."
+                );
+
+            return;
+            }
+            new Chart(
+                canvas,
+                {
+                    type: "bar",
+
+                    data: {
+                        labels: locations,
+
+                        datasets: [
+                            {
+                                label: "Average Rent",
+                                data: prices
+                            }
+                        ]
+                    },
+
+                    options: {
+                        responsive: true,
+
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        document.getElementById(
+            "applyFilter"
+        ).addEventListener(
+            "click",
+            loadListings
+        );
+
+
+        document.getElementById(
+            "showAll"
+        ).addEventListener(
+            "click",
+            function()
+            {
+                document.getElementById(
+                    "maxPrice"
+                ).value = "";
+
+                document.getElementById(
+                    "minBedrooms"
+                ).value = "";
+                document.getElementById(
+                    "minBathrooms"
+                ).value = "";
+                loadListings();
+            }
+        );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function()
+            {
+                loadListings();
+                loadLocationChart();
+            }
+);
+
+    </script>
+
+</body>
+
+</html>
