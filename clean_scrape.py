@@ -27,7 +27,7 @@ df['parking_sort'] = pd.to_numeric(df['Parking'].str.extract(r'(\d+)')[0],
 df["size_sort"] = pd.to_numeric(df["Size (sqft)"].str.extract(r"(\d+)")[0],
     errors="coerce")
 
-# make list to reomve temporary columns
+# make list to remove temporary columns
 helper_columns=["price_sort","bedrooms_sort","bathrooms_sort","size_sort",'parking_sort']
 
 #title of each table
