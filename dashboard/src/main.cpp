@@ -10,6 +10,7 @@
 #include "analytics.hpp"
 #include "csv_loader.hpp"
 #include "price_history.hpp"
+#include "validation.hpp"
 
 // =======================================================================
 
@@ -17,10 +18,10 @@ int main()
 {
 
     std::vector<Listing> listings {
-    loadListingsFromCsv("dashboard/data/listings.csv")
+    loadListingsFromCsv("listings.csv")
     };
     //print price history
-    std::vector<PriceHistoryEntry> history {loadPriceHistory("dashboard/data/price_history.csv")};
+    std::vector<PriceHistoryEntry> history {loadPriceHistory("price_history.csv")};
     std::vector<PriceHistoryEntry> filteredHistory {getPriceHistoryForListing(history, "A001")};
     attachPreviousPrices(
         listings,
@@ -210,12 +211,15 @@ int main()
             << '\n';
     }
 
-    std::cout 
+    std::cout
         << "PRICE HISTORY TEST\n"
         << "==================\n"
-        << "Total history entries: " << filteredHistory.size() << '\n'
-        << "History for A001:\n";
-    
+        << "Total history rows loaded: "
+        << history.size()
+        << '\n'
+        << "History entries for A001: "
+        << filteredHistory.size()
+        << '\n';
     for (const PriceHistoryEntry& entry : filteredHistory)
     {
         std::cout
@@ -258,17 +262,80 @@ int main()
                 << "Current price: Please Contact\n";
         }
     }
-        if (previousPrice.has_value())
+    if (previousPrice.has_value())
+    {
+        std::cout
+            << "Previous price: $"
+            << *previousPrice
+            << '\n';
+    }
+    else
+    {
+        std::cout
+            << "Previous price: unavailable\n";
+    }
+    std::cout << "\n=============================\n";
+    std::cout << "DATA VALIDATION\n";
+    std::cout << "=============================\n";
+
+    int suspiciousListings = 0;
+    int totalIssues = 0;
+    int printedListings = 0;
+
+    for (const Listing& listing : listings)
+    {
+        std::vector<ValidationIssue> issues = validateListing(listing);
+
+        if (!issues.empty())
         {
-            std::cout
-                << "Previous price: $"
-                << *previousPrice
-                << '\n';
+            ++suspiciousListings;
+            totalIssues += static_cast<int>(issues.size());
+
+            // Only print the first 20 suspicious listings
+            if (printedListings < 20)
+            {
+                std::cout
+                    << "\nListing ID: "
+                    << listing.id
+                    << "\n";
+
+                std::cout
+                    << "Title: "
+                    << listing.title
+                    << "\n";
+
+                for (const ValidationIssue& issue : issues)
+                {
+                    std::cout
+                        << "  [WARNING] "
+                        << issue.field
+                        << ": "
+                        << issue.message
+                        << "\n";
+                }
+
+                ++printedListings;
+            }
         }
-        else
-        {
-            std::cout
-                << "Previous price: unavailable\n";
-        }
-        return 0;
+    }
+
+    std::cout << "\n-----------------------------\n";
+
+    std::cout
+        << "Listings checked: "
+        << listings.size()
+        << "\n";
+
+    std::cout
+        << "Suspicious listings: "
+        << suspiciousListings
+        << "\n";
+
+    std::cout
+        << "Total validation issues: "
+        << totalIssues
+        << "\n";
+
+    std::cout << "=============================\n";
+    return 0;
 }

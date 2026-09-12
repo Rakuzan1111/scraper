@@ -23,6 +23,7 @@ add_library(rental_core STATIC
     src/csv_loader.cpp
     src/csv_utils.cpp
     src/price_history.cpp
+    src/validation.cpp
 )
 
 target_include_directories(rental_core

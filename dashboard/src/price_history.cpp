@@ -26,7 +26,7 @@ std::vector<PriceHistoryEntry> loadPriceHistory(
         std::vector<std::string> fields {
             splitCsvLine(line)
         };
-            if (fields.size() != 6)
+            if (fields.size() != 5)
         {
             std::cerr << "Skipping invalid CSV row.\n";
             continue; // keyword to stop current loop and start next iteration 
@@ -34,11 +34,11 @@ std::vector<PriceHistoryEntry> loadPriceHistory(
         PriceHistoryEntry entry;
 
         entry.listingId = fields[0];
-        entry.url = fields[1];
-        entry.title = fields[2];
-        entry.location = fields[3];
-        entry.price = parseOptionalDouble(fields[4]);
-        entry.checkedAt = fields[5];
+        //entry.url = fields[1];
+        entry.title = fields[1];
+        entry.location = fields[2];
+        entry.price = parseOptionalDouble(fields[3]);
+        entry.checkedAt = fields[4];
 
         priceHistory.push_back(entry);
     }

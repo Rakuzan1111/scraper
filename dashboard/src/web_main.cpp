@@ -11,13 +11,13 @@ int main()
     // get the data in listings.csv file
     std::vector<Listing> listings {
         loadListingsFromCsv(
-            "dashboard/data/listings.csv"
+            "listings.csv"
         )
     };
 
     std::vector<PriceHistoryEntry> history {
         loadPriceHistory(
-            "dashboard/data/price_history.csv"
+            "price_history.csv"
         )
     };
 
@@ -235,7 +235,7 @@ drogon::app().registerHandler(
 
         std::vector<PriceHistoryEntry> history {
             loadPriceHistory(
-                "dashboard/data/price_history.csv"
+                "price_history.csv"
             )
         };
 
