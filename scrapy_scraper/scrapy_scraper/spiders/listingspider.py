@@ -27,6 +27,9 @@ class ListingspiderSpider(scrapy.Spider):
     seen = set()
     new = 0
     duplicate = 0
+    async def start(self):
+        for request in self.start_requests():
+            yield request
 
     def start_requests(self):
         
