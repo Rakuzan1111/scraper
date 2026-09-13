@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Crawl listingspider",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scrapy",
+            "args": ["crawl", "listingspider", "-o", "listings.csv"],
+            "cwd": "${workspaceFolder}/scrapy_scraper",
+            "console": "integratedTerminal"
+        }
+    ]
+}
