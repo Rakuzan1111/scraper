@@ -2,7 +2,9 @@ import scrapy
 import re
 import logging
 from logging.handlers import RotatingFileHandler
-import time
+from scrapy import signals
+import os
+import csv
 
 handler = RotatingFileHandler(filename='logs.txt', maxBytes=1_000_000, backupCount=3, encoding='UTF-8-SIG')
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s\n')
@@ -27,6 +29,35 @@ class ListingspiderSpider(scrapy.Spider):
     seen = set()
     new = 0
     duplicate = 0
+    OUTPUT_CSV = 'listings.csv' 
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super().from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_opened, signal=signals.spider_opened)
+        return spider
+    
+    def spider_closed(self, reason):
+        logger.info(
+            f'Spider closed ({reason}) | new={self.new} | '
+            f'duplicates={self.duplicate} | total seen={len(self.seen)}'
+        )
+        print(f'Done. New: {self.new}, Duplicates: {self.duplicate}, '
+              f'Total seen: {len(self.seen)} (reason: {reason})')
+
+    def spider_opened(self):
+        """Preload IDs already saved in a prior run so they're skipped."""
+        if not os.path.exists(self.OUTPUT_CSV):
+            return
+        try:
+            with open(self.OUTPUT_CSV, newline='', encoding='UTF-8-SIG') as f:
+                for row in csv.DictReader(f):
+                    listing_id = row.get('Listing ID')
+                    if listing_id and listing_id != 'N/A':
+                        self.seen.add(listing_id)
+            logger.info(f'Preloaded {len(self.seen)} listing IDs from {self.OUTPUT_CSV}')
+        except Exception as e:
+            logger.error(f'Could not preload seen IDs from {self.OUTPUT_CSV}: {e}')
 
     #For later scrapy versions
     async def start(self):
@@ -36,7 +67,7 @@ class ListingspiderSpider(scrapy.Spider):
     def start_requests(self):
         
         url = "https://www.kijiji.ca/b-a-louer/grand-montreal/c30349001l80002"
-        for page in range(1):
+        for page in range(1, 3):
             
             if page != 1:
                 url = f"https://www.kijiji.ca/b-a-louer/grand-montreal/page-{page}/c30349001l80002"
@@ -44,8 +75,6 @@ class ListingspiderSpider(scrapy.Spider):
                 url=url,
                 callback=self.parse
             )
-
-    
 
     def parse(self, response):
         print("STATUS:", response.status)
@@ -64,20 +93,19 @@ class ListingspiderSpider(scrapy.Spider):
             try:
                 listing_website = card.css('h3 a::attr(href)').get()
 
-                if listing_website:
-                    listing_id = listing_website.rstrip('/').split('/')[-1]
-                    
-                else:
-                    listing_id = 'N/A'
-                    logger.warning('Listing has no website')
+                if not listing_website:
+                    logger.warning(f"Listing has no website | status={response.status} | url={response.url}")
+                    continue
 
+                listing_id = listing_website.rstrip('/').split('/')[-1]
+                
                 # Filters duplicates with set()
-                if listing_website in self.seen:
+                if listing_id in self.seen:
                     self.duplicate += 1
                     logger.debug(f'Listing {listing_id} is already in listings. Skip over.')
                     continue
                 
-                self.seen.add(listing_website)
+                self.seen.add(listing_id)
                 self.new += 1
 
                 size_text = card.css('li[aria-label="Size (sqft)"] ::text').get(default='N/A')
@@ -92,7 +120,7 @@ class ListingspiderSpider(scrapy.Spider):
                     'Bathrooms' : card.css('li[aria-label="Bathrooms"] ::text').get(default='N/A'),
                     'Unit Type' : card.css('li[aria-label="Unit type"] ::text').get(default='N/A'),
                     'Parking' : card.css('li[aria-label="Parking included"] ::text').get(default='N/A'),
-                    'Size (sqft)' : size_match.group() if size_match else 'N/A',
+                    'Size (sqft)' : size_match.group() if size_match else 'N/A'
                     
                     }
                 
@@ -176,6 +204,7 @@ class ListingspiderSpider(scrapy.Spider):
             'Appliances': joined('Appliances'),
             'Includes': joined('Includes'),
             'Building amenities': joined('Building amenities'),
+            'Website': response.url,
         }
 
         listing.update(further_listing_information)
